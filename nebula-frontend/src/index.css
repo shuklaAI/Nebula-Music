@@ -1,0 +1,85 @@
+/* index.css or global.css */
+:root {
+  --nebula-bg: #0a0a0a;
+  --nebula-glass: rgba(255, 255, 255, 0.05);
+  --nebula-border: rgba(255, 255, 255, 0.1);
+  --nebula-primary: #8b5cf6;
+  --nebula-accent: #06b6d4;
+  --nebula-text: #ffffff;
+  --nebula-subtext: #aaaaaa;
+}
+
+body {
+  margin: 0;
+  background: var(--nebula-bg);
+  color: var(--nebula-text);
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+.app-container {
+  display: flex;
+  background: linear-gradient(180deg, #0a0a0a 0%, #0f0f1a 100%);
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Sidebar Glass Look */
+.sidebar {
+  width: 240px;
+  background: var(--nebula-glass);
+  backdrop-filter: blur(20px);
+  border-right: 1px solid var(--nebula-border);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+/* Scrollbar clean */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--nebula-border);
+  border-radius: 4px;
+}
+
+/* Main content glass padding */
+.main-content {
+  flex: 1;
+  padding: 40px;
+  background: linear-gradient(180deg, rgba(15, 15, 20, 0.9) 0%, rgba(10, 10, 15, 1) 100%);
+  backdrop-filter: blur(40px);
+}
+
+/* Headings */
+h1, h2, h3 {
+  color: var(--nebula-text);
+  letter-spacing: 0.5px;
+}
+
+/* Buttons */
+button {
+  background: linear-gradient(135deg, var(--nebula-primary), var(--nebula-accent));
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* Smooth fade animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease forwards;
+}

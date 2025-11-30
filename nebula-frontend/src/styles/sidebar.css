@@ -1,0 +1,148 @@
+import React from "react";
+import { NavLink } from "react-router-dom";
+import { FiHome, FiSearch, FiHeart, FiClock, FiSettings } from "react-icons/fi";
+import { RiLibraryLine } from "react-icons/ri";
+
+export default function Sidebar() {
+  const links = [
+    { to: "/", label: "Home", icon: <FiHome size={20} /> },
+    { to: "/search", label: "Search", icon: <FiSearch size={20} /> },
+  ];
+
+  const library = [
+    { to: "/library", label: "Your Library", icon: <RiLibraryLine size={20} /> },
+    { to: "/liked", label: "Liked Songs", icon: <FiHeart size={20} /> },
+    { to: "/discover", label: "Discover", icon: <FiClock size={20} /> },
+  ];
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        bottom: 0,
+        width: 240,
+        background: "#0b0b0b", // opaque background
+        borderRight: "1px solid #222",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        padding: "24px 0",
+        color: "#ccc",
+        zIndex: 999,
+      }}
+    >
+      {/* TOP SECTION */}
+      <div>
+        <div
+          style={{
+            fontSize: 22,
+            fontWeight: 700,
+            color: "#fff",
+            textAlign: "center",
+            marginBottom: 30,
+            letterSpacing: 0.5,
+          }}
+        >
+          Nebula Music
+        </div>
+
+        {/* Main Links */}
+        <nav style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {links.map(({ to, label, icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              style={({ isActive }) => ({
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "10px 28px",
+                color: isActive ? "#fff" : "#aaa",
+                textDecoration: "none",
+                background: isActive ? "rgba(139, 92, 246, 0.12)" : "transparent",
+                borderLeft: isActive ? "3px solid #8b5cf6" : "3px solid transparent",
+                transition: "all 180ms ease",
+              })}
+            >
+              {icon}
+              <span
+                style={{
+                  fontSize: 15,
+                  fontWeight: 500,
+                }}
+              >
+                {label}
+              </span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Library Section */}
+        <div
+          style={{
+            fontSize: 13,
+            color: "#777",
+            margin: "28px 28px 8px",
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: 0.6,
+          }}
+        >
+          Library
+        </div>
+
+        <nav style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {library.map(({ to, label, icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              style={({ isActive }) => ({
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                padding: "10px 28px",
+                color: isActive ? "#fff" : "#aaa",
+                textDecoration: "none",
+                background: isActive ? "rgba(139, 92, 246, 0.12)" : "transparent",
+                borderLeft: isActive ? "3px solid #8b5cf6" : "3px solid transparent",
+                transition: "all 180ms ease",
+              })}
+            >
+              {icon}
+              <span style={{ fontSize: 15, fontWeight: 500 }}>{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </div>
+
+      {/* BOTTOM SETTINGS */}
+      <div
+        style={{
+          borderTop: "1px solid #222",
+          marginTop: 30,
+          paddingTop: 20,
+          textAlign: "center",
+        }}
+      >
+        <NavLink
+          to="/settings"
+          style={({ isActive }) => ({
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            padding: "10px 0",
+            color: isActive ? "#fff" : "#aaa",
+            textDecoration: "none",
+            transition: "color 150ms ease",
+          })}
+        >
+          <FiSettings size={18} />
+          <span style={{ fontSize: 15 }}>Settings</span>
+        </NavLink>
+      </div>
+    </div>
+  );
+}
