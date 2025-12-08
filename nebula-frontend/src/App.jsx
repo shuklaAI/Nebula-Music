@@ -1,4 +1,4 @@
-// src/App.jsx (fixed)
+// src/App.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -17,7 +17,8 @@ export default function App() {
   const [upNextQueue, setUpNextQueue] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [likedSet, setLikedSet] = useState(() => new Set());
-  const [streamCache] = useState(() => new Map()); // cache to speed up playback
+  const [streamCache] = useState(() => new Map());
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const audioRef = useRef(null);
 
@@ -111,7 +112,9 @@ export default function App() {
     }
 
     try {
-      const res = await fetch(`${BACKEND}/autoplay/upnext?videoId=${track.videoId}`);
+      const res = await fetch(
+        `${BACKEND}/autoplay/upnext?videoId=${track.videoId}`
+      );
       const data = await res.json();
       if (Array.isArray(data.upnext) && data.upnext.length > 0) {
         setUpNextQueue([track, ...data.upnext]);
@@ -146,10 +149,23 @@ export default function App() {
   }, [currentTrack]);
 
   return (
-    <div className="app-container">
-      <Sidebar />
+    <div className="app-container" style={{ display: "flex" }}>
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={setSidebarCollapsed}
+      />
 
-      <div className="main-content" style={{ marginLeft: 240 }}>
+      <div
+        className="main-content"
+        style={{
+          marginLeft: isSidebarCollapsed ? "80px" : "260px",
+          transition: "margin-left 0.3s ease",
+          flex: 1,
+          minHeight: "100vh",
+          background: "#0d0d0d",
+          color: "white",
+        }}
+      >
         <Routes>
           <Route path="/" element={<Home onPlay={playTrack} />} />
           <Route path="/search" element={<Search onPlay={playTrack} />} />

@@ -232,3 +232,4 @@ async def serve_frontend(full_path: str):
     if index_path.exists():
         return FileResponse(index_path)
     return {"error": "Frontend build not found"}
+

@@ -20,6 +20,8 @@ export default function MiniPlayer({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // 0..100
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [repeat, setRepeat] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -47,6 +49,8 @@ export default function MiniPlayer({
       raf.current = requestAnimationFrame(() => {
         raf.current = null;
         if (!audio.duration) return;
+        setCurrentTime(audio.currentTime);
+        setDuration(audio.duration);
         setProgress((audio.currentTime / audio.duration) * 100);
       });
     };
@@ -73,7 +77,7 @@ export default function MiniPlayer({
     };
   }, [audioRef, repeat, onNext]);
 
-  // ensure stream src if parent didn’t set it already
+  // ensure stream src if parent didn't set it already
   useEffect(() => {
     const audio = audioRef?.current;
     if (!audio || !currentTrack?.videoId) return;
@@ -124,6 +128,14 @@ export default function MiniPlayer({
   const closeExpanded = () => setIsExpanded(false);
 
   const openPlaylistModal = () => setShowPlaylistModal(true);
+
+  // Format time function
+  const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return "0:00";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
   if (!isVisible || !currentTrack) return null;
 
@@ -233,7 +245,7 @@ export default function MiniPlayer({
           </div>
         </div>
 
-        {/* controls (clicks don’t bubble to open) */}
+        {/* controls (clicks don't bubble to open) */}
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div
             onClick={(e) => {
@@ -348,32 +360,33 @@ export default function MiniPlayer({
         </div>
       </div>
 
-      {/* EXPANDED OVERLAY */}
+      {/* EXPANDED OVERLAY - FIXED SIZING */}
       {isExpanded && (
         <div
           style={{
             position: "fixed",
             inset: 0,
             zIndex: 1400,
-            display: "grid",
-            placeItems: "end center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             background:
               "linear-gradient(0deg, rgba(0,0,0,0.65), rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.2) 70%, rgba(0,0,0,0.05))",
             backdropFilter: "blur(5px)",
             WebkitBackdropFilter: "blur(8px)",
             animation: "fadeIn 200ms ease",
+            padding: "20px",
           }}
           onClick={closeExpanded}
         >
-          {/* panel */}
+          {/* panel - CONSISTENT SIZE */}
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              width: "min(1000px, 95vw)",
-              maxHeight: "calc(200vh - 96px)",
-              marginBottom: 12,
+              width: "min(900px, calc(100vw - 40px))",
+              maxHeight: "calc(100vh - 40px)",
               borderRadius: 26,
-              padding: 6,
+              padding: "20px",
               background: glassBg,
               backdropFilter: "blur(24px) saturate(1.15)",
               WebkitBackdropFilter: "blur(24px) saturate(1.15)",
@@ -382,11 +395,11 @@ export default function MiniPlayer({
                 "inset 0 1px 0 rgba(255,255,255,0.35), 0 18px 60px rgba(0,0,0,0.55), 0 10px 28px rgba(139,92,246,0.22)",
               position: "relative",
               overflow: "hidden",
-              transformOrigin: "bottom center",
+              transformOrigin: "center",
               animation: "riseUp 240ms cubic-bezier(.2,.8,.2,1)",
               display: "grid",
               gridTemplateColumns: "minmax(0,1fr) 210px",
-              gap: 18,
+              gap: 24,
             }}
           >
             {/* gloss */}
@@ -404,8 +417,8 @@ export default function MiniPlayer({
               title="Close"
               style={{
                 position: "absolute",
-                top: 12,
-                right: 14,
+                top: 16,
+                right: 16,
                 width: 36,
                 height: 36,
                 borderRadius: 10,
@@ -416,6 +429,7 @@ export default function MiniPlayer({
                 placeItems: "center",
                 cursor: "pointer",
                 backdropFilter: "blur(8px)",
+                zIndex: 10,
               }}
             >
               <FiX />
@@ -424,82 +438,92 @@ export default function MiniPlayer({
             {/* left: art + transport */}
             <div
               style={{
-                display: "grid",
-                gridTemplateRows: "1fr auto",
-                gap: 16,
+                display: "flex",
+                flexDirection: "column",
+                gap: 24,
                 minWidth: 0,
               }}
             >
+              {/* Album art with neon ring - PROPERLY CONSTRAINED */}
               <div
                 style={{
-                  borderRadius: 20,
-                  overflow: "hidden",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "100%",
+                  height: "300px",
                   position: "relative",
-                  boxShadow:"0 16px 50px rgba(0,0,0,0.55), 0 6px 18px rgba(139,92,246,0.25)",
-                    aspectRatio: "2 / 2",
-                    width: "50%",
                 }}
               >
-                <img
-                  src={
-                    currentTrack.thumbnail ||
-                    `https://img.youtube.com/vi/${currentTrack.videoId}/hqdefault.jpg`
-                  }
-                  alt={currentTrack.title}
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-                {/* subtle shine */}
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                      "radial-gradient(120% 140% at 100% -20%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.08) 40%, transparent 60%)",
-                    pointerEvents: "none",
-                  }}
-                />
-              </div>
-
-              {/* transport */}
-              <div style={{ padding: "6px 10px" }}>
-                {/* progress bar */}
                 <div
                   style={{
                     position: "relative",
-                    height: 6,
-                    borderRadius: 4,
-                    background: "rgba(255,255,255,0.1)",
-                    overflow: "hidden",
-                    marginBottom: 14,
+                    width: "min(280px, 70%)",
+                    aspectRatio: "1/1",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
                   }}
                 >
+                  {/* Rotating + Pulsing Neon Ring - FIXED POSITIONING */}
+                  {isPlaying && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        width: "calc(100% + 32px)",
+                        height: "calc(100% + 32px)",
+                        borderRadius: "50%",
+                        border: "3px solid transparent",
+                        borderTop: `3px solid ${purple}`,
+                        borderRight: "3px solid rgba(244,114,182,0.8)",
+                        filter:
+                          "drop-shadow(0 0 15px rgba(139,92,246,0.9)) drop-shadow(0 0 25px rgba(244,114,182,0.5))",
+                        animation:
+                          "rotateRing 10s linear infinite, pulseGlow 3s ease-in-out infinite",
+                        pointerEvents: "none",
+                        transformOrigin: "center",
+                        zIndex: 1,
+                      }}
+                    />
+                  )}
+
+                  {/* Album Art */}
                   <div
                     style={{
-                      width: `${progress}%`,
+                      borderRadius: "50%",
+                      overflow: "hidden",
+                      position: "relative",
+                      boxShadow:
+                        "0 16px 50px rgba(0,0,0,0.55), 0 6px 18px rgba(139,92,246,0.25)",
+                      width: "100%",
                       height: "100%",
-                      background:
-                        "linear-gradient(90deg, rgba(139,92,246,1), rgba(139,92,246,0.55))",
-                      boxShadow: "0 0 16px rgba(139,92,246,0.85)",
-                      transition: "width 120ms linear",
-                      pointerEvents: "none",
+                      zIndex: 2,
                     }}
-                  />
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="0.25"
-                    value={progress}
-                    onChange={handleSeek}
-                    style={{
-                      position: "absolute",
-                      inset: -6,
-                      opacity: 0,
-                      cursor: "pointer",
-                    }}
-                  />
+                  >
+                    <img
+                      src={
+                        currentTrack.thumbnail ||
+                        `https://img.youtube.com/vi/${currentTrack.videoId}/hqdefault.jpg`
+                      }
+                      alt={currentTrack.title}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                    {/* subtle shine */}
+                    <div
+                      style={{
+                        position: "absolute",
+                        inset: 0,
+                        background:
+                          "radial-gradient(120% 140% at 100% -20%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.08) 40%, transparent 60%)",
+                        pointerEvents: "none",
+                      }}
+                    />
+                  </div>
                 </div>
+              </div>
 
+              {/* transport */}
+              <div style={{ padding: "0 10px" }}>
                 {/* title-row */}
                 <div
                   style={{
@@ -507,7 +531,7 @@ export default function MiniPlayer({
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 12,
-                    marginBottom: 10,
+                    marginBottom: 16,
                     minWidth: 0,
                   }}
                 >
@@ -528,7 +552,7 @@ export default function MiniPlayer({
                     <div
                       style={{
                         color: "rgba(255,255,255,0.8)",
-                        fontSize: 13,
+                        fontSize: 14,
                         marginTop: 2,
                         pointerEvents: "none",
                       }}
@@ -541,18 +565,7 @@ export default function MiniPlayer({
                     <button
                       onClick={handleToggleLike}
                       title={isLiked ? "Unlike" : "Like"}
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 12,
-                        border: "1px solid rgba(255,255,255,0.25)",
-                        background: "rgba(0,0,0,0.25)",
-                        color: "#fff",
-                        display: "grid",
-                        placeItems: "center",
-                        cursor: "pointer",
-                        backdropFilter: "blur(8px)",
-                      }}
+                      style={btnGhost(isLiked ? purple : "rgba(255,255,255,0.85)")}
                     >
                       {isLiked ? <FaHeart color={purple} /> : <FiHeart />}
                     </button>
@@ -560,21 +573,61 @@ export default function MiniPlayer({
                     <button
                       onClick={openPlaylistModal}
                       title="Add to playlist"
-                      style={{
-                        width: 40,
-                        height: 40,
-                        borderRadius: 12,
-                        border: "1px solid rgba(255,255,255,0.25)",
-                        background: "rgba(0,0,0,0.25)",
-                        color: "#fff",
-                        display: "grid",
-                        placeItems: "center",
-                        cursor: "pointer",
-                        backdropFilter: "blur(8px)",
-                      }}
+                      style={btnGhost()}
                     >
                       <FiPlus />
                     </button>
+                  </div>
+                </div>
+
+                {/* progress bar with time display */}
+                <div style={{ marginBottom: 20 }}>
+                  <div
+                    style={{
+                      position: "relative",
+                      height: 6,
+                      borderRadius: 4,
+                      background: "rgba(255,255,255,0.1)",
+                      overflow: "hidden",
+                      marginBottom: 8,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${progress}%`,
+                        height: "100%",
+                        background:
+                          "linear-gradient(90deg, rgba(139,92,246,1), rgba(139,92,246,0.55))",
+                        boxShadow: "0 0 16px rgba(139,92,246,0.85)",
+                        transition: "width 120ms linear",
+                        pointerEvents: "none",
+                      }}
+                    />
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="0.25"
+                      value={progress}
+                      onChange={handleSeek}
+                      style={{
+                        position: "absolute",
+                        inset: -6,
+                        opacity: 0,
+                        cursor: "pointer",
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: 12,
+                      color: "rgba(255,255,255,0.7)",
+                    }}
+                  >
+                    <span>{formatTime(currentTime)}</span>
+                    <span>{formatTime(duration)}</span>
                   </div>
                 </div>
 
@@ -636,32 +689,67 @@ export default function MiniPlayer({
 
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: 18 }}>
                     <FiVolume2 />
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      value={volume}
-                      onChange={(e) => setVolume(parseFloat(e.target.value))}
-                    />
+                    {/* FIXED VOLUME SLIDER WITH CUSTOM STYLING */}
+                    <div
+                      style={{
+                        position: "relative",
+                        width: "80px",
+                        height: "4px",
+                        borderRadius: "2px",
+                        background: "rgba(255,255,255,0.1)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: 0,
+                          top: 0,
+                          width: `${volume * 100}%`,
+                          height: "100%",
+                          background: purple,
+                          borderRadius: "2px",
+                          pointerEvents: "none",
+                        }}
+                      />
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.05"
+                        value={volume}
+                        onChange={(e) => setVolume(parseFloat(e.target.value))}
+                        style={{
+                          position: "absolute",
+                          top: "-6px",
+                          left: 0,
+                          width: "100%",
+                          height: "16px",
+                          opacity: 0,
+                          cursor: "pointer",
+                          zIndex: 2,
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* right: up-next placeholder (kept simple, you can wire your global queue here) */}
+            {/* right: up-next placeholder */}
             <div
               style={{
                 background: "rgba(0,0,0,0.25)",
                 border: "1px solid rgba(255,255,255,0.14)",
                 borderRadius: 18,
-                padding: 14,
+                padding: 16,
                 backdropFilter: "blur(10px)",
                 WebkitBackdropFilter: "blur(10px)",
                 overflow: "auto",
+                maxHeight: "100%",
               }}
             >
-              <div style={{ color: "#fff", fontWeight: 700, fontSize: 16, marginBottom: 10 }}>
+              <div style={{ color: "#fff", fontWeight: 700, fontSize: 16, marginBottom: 12 }}>
                 Up Next
               </div>
               <div style={{ color: "#aaa", fontSize: 13 }}>
@@ -693,7 +781,14 @@ export default function MiniPlayer({
           0% { transform: translateY(30px) scale(.98); opacity: 0; }
           100% { transform: translateY(0) scale(1); opacity: 1; }
         }
-        input[type="range"]{ accent-color: ${purple}; }
+        @keyframes rotateRing {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { opacity: 1; filter: drop-shadow(0 0 15px rgba(139,92,246,0.9)) drop-shadow(0 0 25px rgba(244,114,182,0.5)); }
+          50% { opacity: 0.7; filter: drop-shadow(0 0 10px rgba(139,92,246,0.7)) drop-shadow(0 0 20px rgba(244,114,182,0.3)); }
+        }
       `}</style>
     </>
   );
@@ -701,9 +796,9 @@ export default function MiniPlayer({
 
 function btnGhost(color = "rgba(255,255,255,0.85)") {
   return {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     border: "1px solid rgba(255,255,255,0.25)",
     background: "rgba(0,0,0,0.25)",
     color,
@@ -711,5 +806,6 @@ function btnGhost(color = "rgba(255,255,255,0.85)") {
     placeItems: "center",
     cursor: "pointer",
     backdropFilter: "blur(8px)",
+    transition: "all 0.2s ease",
   };
 }
