@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FaPlay, FaPause, FaStepForward, FaStepBackward, FaHeart } from "react-icons/fa";
 import { FiRepeat, FiVolume2, FiHeart, FiPlus, FiX } from "react-icons/fi";
-import PlaylistModal from "./PlaylistModal";
 
 export default function MiniPlayer({
   currentTrack,
@@ -12,6 +11,8 @@ export default function MiniPlayer({
   onToggleLike,
   onNext,
   onPrev,
+  upNextQueue,
+  onPlay,
 }) {
   const backend = "http://127.0.0.1:8000";
 
@@ -145,6 +146,20 @@ export default function MiniPlayer({
     "linear-gradient( to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02) )";
   const glassOverlay =
     "radial-gradient(120% 200% at 50% -50%, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.05) 40%, rgba(0,0,0,0.25) 100%)";
+
+  // Sample upNext data (replace with actual upNextQueue)
+  const sampleUpNext = [
+    { title: "The Best Acoustic Cover of Popular Songs", artist: "Acoustic Songs", duration: "3:45", videoId: "1" },
+    { title: "Ulla Records", artist: "Video Jukebox", duration: "4:20", videoId: "2" },
+    { title: "100M Blockbusters", artist: "90's Evergreen !", duration: "3:15", videoId: "3" },
+    { title: "Tips Official", artist: "Latest Hits", duration: "3:58", videoId: "4" },
+    { title: "Ek Din Pyaar || m", artist: "BRAZI-IDOL", duration: "4:32", videoId: "5" },
+    { title: "Daftar Ki Girl Fui", artist: "T-Series", duration: "3:27", videoId: "6" },
+    { title: "Romantic Mix", artist: "Love Songs", duration: "4:15", videoId: "7" },
+    { title: "Workout Beats", artist: "Energy Mix", duration: "3:40", videoId: "8" },
+  ];
+
+  const displayUpNext = upNextQueue && upNextQueue.length > 0 ? upNextQueue : sampleUpNext;
 
   return (
     <>
@@ -398,7 +413,7 @@ export default function MiniPlayer({
               transformOrigin: "center",
               animation: "riseUp 240ms cubic-bezier(.2,.8,.2,1)",
               display: "grid",
-              gridTemplateColumns: "minmax(0,1fr) 210px",
+              gridTemplateColumns: "minmax(0,1fr) 300px",
               gap: 24,
             }}
           >
@@ -442,6 +457,7 @@ export default function MiniPlayer({
                 flexDirection: "column",
                 gap: 24,
                 minWidth: 0,
+                paddingRight: 10,
               }}
             >
               {/* Album art with neon ring - PROPERLY CONSTRAINED */}
@@ -522,7 +538,7 @@ export default function MiniPlayer({
                 </div>
               </div>
 
-              {/* transport */}
+              {/* transport - FIXED ALIGNMENT */}
               <div style={{ padding: "0 10px" }}>
                 {/* title-row */}
                 <div
@@ -531,7 +547,7 @@ export default function MiniPlayer({
                     alignItems: "center",
                     justifyContent: "space-between",
                     gap: 12,
-                    marginBottom: 16,
+                    marginBottom: 20,
                     minWidth: 0,
                   }}
                 >
@@ -545,6 +561,7 @@ export default function MiniPlayer({
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         pointerEvents: "none",
+                        marginBottom: 4,
                       }}
                     >
                       {currentTrack.title}
@@ -553,7 +570,6 @@ export default function MiniPlayer({
                       style={{
                         color: "rgba(255,255,255,0.8)",
                         fontSize: 14,
-                        marginTop: 2,
                         pointerEvents: "none",
                       }}
                     >
@@ -561,7 +577,7 @@ export default function MiniPlayer({
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexShrink: 0 }}>
                     <button
                       onClick={handleToggleLike}
                       title={isLiked ? "Unlike" : "Like"}
@@ -581,7 +597,7 @@ export default function MiniPlayer({
                 </div>
 
                 {/* progress bar with time display */}
-                <div style={{ marginBottom: 20 }}>
+                <div style={{ marginBottom: 24 }}>
                   <div
                     style={{
                       position: "relative",
@@ -631,20 +647,27 @@ export default function MiniPlayer({
                   </div>
                 </div>
 
-                {/* controls */}
+                {/* controls - FIXED ALIGNMENT */}
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: 22,
+                    gap: 24,
                     paddingBottom: 6,
                   }}
                 >
                   <button
                     onClick={onPrev}
                     title="Previous"
-                    style={btnGhost()}
+                    style={{
+                      ...btnGhost(),
+                      width: 44,
+                      height: 44,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
                     <FaStepBackward size={18} />
                   </button>
@@ -653,28 +676,37 @@ export default function MiniPlayer({
                     onClick={togglePlay}
                     title={isPlaying ? "Pause" : "Play"}
                     style={{
-                      width: 58,
-                      height: 58,
+                      width: 60,
+                      height: 60,
                       borderRadius: 999,
                       background: purple,
                       color: "#fff",
-                      display: "grid",
-                      placeItems: "center",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                       boxShadow: isPlaying
                         ? "0 0 28px 8px rgba(139,92,246,0.95)"
                         : "0 0 18px 6px rgba(139,92,246,0.55)",
                       animation: isPlaying ? "pulseMini 1.6s infinite" : "none",
                       border: "none",
                       cursor: "pointer",
+                      margin: "0 4px",
                     }}
                   >
-                    {isPlaying ? <FaPause size={18} /> : <FaPlay size={18} style={{ marginLeft: 2 }} />}
+                    {isPlaying ? <FaPause size={20} /> : <FaPlay size={20} style={{ marginLeft: 2 }} />}
                   </button>
 
                   <button
                     onClick={onNext}
                     title="Next"
-                    style={btnGhost()}
+                    style={{
+                      ...btnGhost(),
+                      width: 44,
+                      height: 44,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
                     <FaStepForward size={18} />
                   </button>
@@ -682,13 +714,28 @@ export default function MiniPlayer({
                   <button
                     onClick={() => setRepeat((r) => !r)}
                     title={repeat ? "Repeat: ON" : "Repeat: OFF"}
-                    style={btnGhost(repeat ? purple : "rgba(255,255,255,0.85)")}
+                    style={{
+                      ...btnGhost(repeat ? purple : "rgba(255,255,255,0.85)"),
+                      width: 44,
+                      height: 44,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      marginLeft: 8,
+                    }}
                   >
-                    <FiRepeat />
+                    <FiRepeat size={18} />
                   </button>
 
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: 18 }}>
-                    <FiVolume2 />
+                  <div style={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    gap: 10, 
+                    marginLeft: 16,
+                    height: 44,
+                    justifyContent: "center",
+                  }}>
+                    <FiVolume2 size={18} />
                     {/* FIXED VOLUME SLIDER WITH CUSTOM STYLING */}
                     <div
                       style={{
@@ -698,6 +745,7 @@ export default function MiniPlayer({
                         borderRadius: "2px",
                         background: "rgba(255,255,255,0.1)",
                         overflow: "hidden",
+                        marginTop: 2,
                       }}
                     >
                       <div
@@ -736,37 +784,208 @@ export default function MiniPlayer({
               </div>
             </div>
 
-            {/* right: up-next placeholder */}
+            {/* right: UpNext - SIMPLIFIED */}
             <div
               style={{
-                background: "rgba(0,0,0,0.25)",
-                border: "1px solid rgba(255,255,255,0.14)",
-                borderRadius: 18,
-                padding: 16,
-                backdropFilter: "blur(10px)",
-                WebkitBackdropFilter: "blur(10px)",
-                overflow: "auto",
+                background: "rgba(0,0,0,0.2)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 20,
+                padding: "16px",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                overflow: "hidden",
+                display: "flex",
+                flexDirection: "column",
                 maxHeight: "100%",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3)",
               }}
             >
-              <div style={{ color: "#fff", fontWeight: 700, fontSize: 16, marginBottom: 12 }}>
-                Up Next
+              {/* UpNext Header */}
+              <div style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "space-between",
+                marginBottom: 16,
+                paddingBottom: 12,
+                borderBottom: "1px solid rgba(255,255,255,0.1)"
+              }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <div style={{ width: 4, height: 20, background: "#8b5cf6", borderRadius: 2, marginRight: 10 }} />
+                  <h3 style={{ color: "#fff", fontWeight: 700, fontSize: 18, margin: 0 }}>Up Next</h3>
+                </div>
+                <div style={{ 
+                  color: "#8b5cf6", 
+                  fontSize: 12, 
+                  background: "rgba(139,92,246,0.1)",
+                  padding: "4px 10px",
+                  borderRadius: 10,
+                  fontWeight: 600
+                }}>
+                  {displayUpNext.length} tracks
+                </div>
               </div>
-              <div style={{ color: "#aaa", fontSize: 13 }}>
-                Hook your global up-next list here (kept minimal to not touch your logic).
+              
+              {/* UpNext List - SIMPLIFIED, NO PLAY BUTTONS */}
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                flex: 1,
+                overflowY: "auto",
+                paddingRight: 4,
+                minHeight: 0,
+              }}>
+                {displayUpNext.map((track, index) => {
+                  const isCurrent = track.videoId === currentTrack?.videoId;
+                  return (
+                    <div
+                      key={track.videoId || index}
+                      onClick={() => {
+                        if (onPlay) onPlay(track);
+                        else if (setCurrentTrack) setCurrentTrack(track);
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "10px 12px",
+                        borderRadius: 12,
+                        background: isCurrent 
+                          ? "rgba(139,92,246,0.2)" 
+                          : "rgba(255,255,255,0.05)",
+                        border: isCurrent 
+                          ? "1px solid rgba(139,92,246,0.4)" 
+                          : "1px solid rgba(255,255,255,0.08)",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                        position: "relative",
+                        overflow: "hidden",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isCurrent) {
+                          e.currentTarget.style.background = "rgba(139,92,246,0.15)";
+                          e.currentTarget.style.borderColor = "rgba(139,92,246,0.3)";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isCurrent) {
+                          e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                          e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                        }
+                      }}
+                    >
+                      {/* Track number */}
+                      <div style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: 6,
+                        background: isCurrent 
+                          ? "rgba(139,92,246,0.8)" 
+                          : index === 0 
+                            ? "rgba(139,92,246,0.3)" 
+                            : "rgba(255,255,255,0.08)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: isCurrent ? "#fff" : (index === 0 ? "#8b5cf6" : "rgba(255,255,255,0.6)"),
+                        fontSize: 11,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}>
+                        {isCurrent ? (
+                          <div style={{ 
+                            width: 6, 
+                            height: 6, 
+                            borderRadius: '50%', 
+                            background: '#fff',
+                            animation: 'pulseNowPlaying 1.5s infinite'
+                          }} />
+                        ) : (
+                          index + 1
+                        )}
+                      </div>
+                      
+                      {/* Album thumbnail */}
+                      <div style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 8,
+                        background: `linear-gradient(135deg, rgba(139,92,246,0.2), rgba(244,114,182,0.2))`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "rgba(255,255,255,0.8)",
+                        fontSize: 14,
+                        flexShrink: 0,
+                        overflow: "hidden",
+                        position: "relative",
+                      }}>
+                        {track.thumbnail ? (
+                          <img 
+                            src={track.thumbnail} 
+                            alt="" 
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        ) : (
+                          <span>♪</span>
+                        )}
+                      </div>
+                      
+                      {/* Track info - PROPER ALIGNMENT */}
+                      <div style={{ 
+                        flex: 1, 
+                        minWidth: 0,
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                      }}>
+                        <div style={{
+                          color: isCurrent ? "#fff" : "#fff",
+                          fontWeight: isCurrent ? 700 : 600,
+                          fontSize: 13,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          marginBottom: 2,
+                          lineHeight: "1.2",
+                        }}>
+                          {track.title}
+                        </div>
+                        <div style={{
+                          color: isCurrent ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.6)",
+                          fontSize: 11,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          lineHeight: "1.2",
+                        }}>
+                          {track.artist}
+                        </div>
+                      </div>
+                      
+                      {/* Duration only - NO PLAY BUTTON */}
+                      <div style={{
+                        color: isCurrent ? "#fff" : "rgba(255,255,255,0.5)",
+                        fontSize: 11,
+                        background: isCurrent 
+                          ? "rgba(139,92,246,0.3)" 
+                          : "rgba(255,255,255,0.08)",
+                        padding: "3px 6px",
+                        borderRadius: 4,
+                        flexShrink: 0,
+                        minWidth: "35px",
+                        textAlign: "center",
+                        fontWeight: isCurrent ? 600 : 400,
+                      }}>
+                        {track.duration || "3:45"}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
-      )}
-
-      {/* Modals */}
-      {showPlaylistModal && (
-        <PlaylistModal
-          track={currentTrack}
-          backend={backend}
-          onClose={() => setShowPlaylistModal(false)}
-        />
       )}
 
       {/* keyframes */}
@@ -788,6 +1007,26 @@ export default function MiniPlayer({
         @keyframes pulseGlow {
           0%, 100% { opacity: 1; filter: drop-shadow(0 0 15px rgba(139,92,246,0.9)) drop-shadow(0 0 25px rgba(244,114,182,0.5)); }
           50% { opacity: 0.7; filter: drop-shadow(0 0 10px rgba(139,92,246,0.7)) drop-shadow(0 0 20px rgba(244,114,182,0.3)); }
+        }
+        @keyframes pulseNowPlaying {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        
+        /* Custom scrollbar for UpNext */
+        div::-webkit-scrollbar {
+          width: 4px;
+        }
+        div::-webkit-scrollbar-track {
+          background: rgba(255,255,255,0.05);
+          border-radius: 2px;
+        }
+        div::-webkit-scrollbar-thumb {
+          background: rgba(139,92,246,0.5);
+          border-radius: 2px;
+        }
+        div::-webkit-scrollbar-thumb:hover {
+          background: rgba(139,92,246,0.7);
         }
       `}</style>
     </>

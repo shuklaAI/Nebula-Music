@@ -26,7 +26,6 @@ _stream_cache = {}
 CACHE_TTL = 60 * 30  # 30 minutes
 
 def get_cached_stream(url: str):
-    """Return cached stream URL if valid."""
     now = time.time()
     entry = _stream_cache.get(url)
     if entry and now - entry["time"] < CACHE_TTL:
@@ -36,7 +35,6 @@ def get_cached_stream(url: str):
     return None
 
 def save_stream(url: str, stream_url: str):
-    """Save a new stream URL in cache."""
     _stream_cache[url] = {"url": stream_url, "time": time.time()}
 
 
@@ -94,26 +92,69 @@ async def search(q: str):
         return []
 
 # ==========================================================
-# 🔁 UP NEXT AUTO QUEUE
+# 🔁 SMART UP NEXT (Dynamic Autoplay)
 # ==========================================================
+_upnext_cache = {}
+UPNEXT_TTL = 60 * 10  # 10 minutes
+
 @app.get("/autoplay/upnext")
 async def autoplay_upnext(videoId: str):
+    """Build dynamic 'Up Next' list similar to YouTube Music autoplay."""
+    now = time.time()
+    if videoId in _upnext_cache and now - _upnext_cache[videoId]["time"] < UPNEXT_TTL:
+        return _upnext_cache[videoId]["data"]
+
     try:
         ydl_opts = {"quiet": True, "extract_flat": True, "skip_download": True}
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(f"https://www.youtube.com/watch?v={videoId}", download=False)
 
         related = []
-        for e in info.get("related_videos", [])[:20]:
-            if e.get("id"):
-                related.append({
-                    "videoId": e["id"],
+        # Pull from YouTube's related_videos
+        for e in info.get("related_videos", [])[:25]:
+            if not e.get("id"):
+                continue
+            related.append({
+                "videoId": e["id"],
+                "title": e.get("title") or "Unknown Title",
+                "artist": e.get("uploader") or "Unknown Artist",
+                "thumbnail": f"https://img.youtube.com/vi/{e['id']}/hqdefault.jpg",
+            })
+
+        # Fallback — if related list is empty, do a smart search
+        if not related:
+            query = f"{info.get('artist','') or info.get('uploader','')} {info.get('title','')}".strip()
+            if not query:
+                query = "popular songs"
+            search_info = ydl.extract_info(f"ytsearch15:{query}", download=False)
+            related = [
+                {
+                    "videoId": e.get("id"),
                     "title": e.get("title"),
                     "artist": e.get("uploader"),
-                    "thumbnail": f"https://img.youtube.com/vi/{e['id']}/hqdefault.jpg",
-                })
+                    "thumbnail": f"https://img.youtube.com/vi/{e.get('id')}/hqdefault.jpg",
+                }
+                for e in search_info.get("entries", [])
+                if e.get("id")
+            ]
+
+        # Sort with same-artist and "music" priority
+        main_artist = (info.get("artist") or info.get("uploader") or "").lower()
+        related.sort(
+            key=lambda r: (
+                (main_artist in (r.get("artist", "") or "").lower()),
+                "music" in (r.get("title", "").lower() + r.get("artist", "").lower()),
+            ),
+            reverse=True,
+        )
+
+        # Shuffle slightly for natural feel
         random.shuffle(related)
-        return {"upnext": related}
+
+        data = {"upnext": related[:20]}
+        _upnext_cache[videoId] = {"data": data, "time": now}
+        return data
+
     except Exception as e:
         logger.warning(f"UpNext failed: {e}")
         return {"upnext": []}
@@ -232,4 +273,3 @@ async def serve_frontend(full_path: str):
     if index_path.exists():
         return FileResponse(index_path)
     return {"error": "Frontend build not found"}
-

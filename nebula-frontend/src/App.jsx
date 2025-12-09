@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useState, useRef, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 
@@ -22,7 +21,7 @@ export default function App() {
 
   const audioRef = useRef(null);
 
-  // -------- Liked Handling --------
+  // 🔁 Refresh liked songs
   const refreshLiked = async () => {
     try {
       const res = await fetch(`${BACKEND}/liked/all`);
@@ -36,6 +35,7 @@ export default function App() {
     }
   };
 
+  // ❤️ Toggle like/unlike
   const toggleLike = async (track) => {
     if (!track?.videoId) return;
     try {
@@ -59,7 +59,7 @@ export default function App() {
     }
   };
 
-  // -------- Stream Helper --------
+  // 🎧 Fetch and cache stream URL
   const getStreamUrl = async (videoId) => {
     if (streamCache.has(videoId)) return streamCache.get(videoId);
     try {
@@ -79,19 +79,22 @@ export default function App() {
     }
   };
 
-  // -------- Core Playback + AutoUpNext --------
-  const playTrack = async (track, contextList = null) => {
+  // 🧠 Smart Play Logic (context-aware)
+  const playTrack = async (track, contextList = null, contextType = "single") => {
     if (!track?.videoId) return;
     const streamUrl = await getStreamUrl(track.videoId);
     if (!streamUrl) return;
 
     const merged = { ...track, streamUrl };
     setCurrentTrack(merged);
+
+    // Start playback
     if (audioRef.current) {
       audioRef.current.src = streamUrl;
       await audioRef.current.play().catch(() => {});
     }
 
+    // Save to recent history
     try {
       const oldList = JSON.parse(localStorage.getItem("recentPlayed") || "[]");
       const newList = [
@@ -102,34 +105,40 @@ export default function App() {
       window.dispatchEvent(new Event("recentUpdated"));
     } catch {}
 
-    if (Array.isArray(contextList) && contextList.length > 0) {
-      setUpNextQueue(contextList);
+    // ⚙️ Contextual handling
+    if (contextType === "playlist" || contextType === "liked") {
+      // ✅ Keep static playlist order
+      setUpNextQueue(contextList || []);
       const idx = contextList.findIndex((t) => t.videoId === track.videoId);
       setCurrentIndex(idx >= 0 ? idx : 0);
     } else {
-      setUpNextQueue([track]);
-      setCurrentIndex(0);
-    }
-
-    try {
-      const res = await fetch(
-        `${BACKEND}/autoplay/upnext?videoId=${track.videoId}`
-      );
-      const data = await res.json();
-      if (Array.isArray(data.upnext) && data.upnext.length > 0) {
-        setUpNextQueue([track, ...data.upnext]);
+      // 🎶 Dynamic queue for single / search
+      try {
+        const res = await fetch(
+          `${BACKEND}/autoplay/upnext?videoId=${track.videoId}`
+        );
+        const data = await res.json();
+        if (Array.isArray(data.upnext) && data.upnext.length > 0) {
+          setUpNextQueue([track, ...data.upnext]);
+          setCurrentIndex(0);
+        } else {
+          setUpNextQueue([track]);
+          setCurrentIndex(0);
+        }
+      } catch (err) {
+        console.warn("UpNext fetch failed:", err);
+        setUpNextQueue([track]);
         setCurrentIndex(0);
       }
-    } catch (err) {
-      console.warn("UpNext build failed:", err);
     }
   };
 
+  // ⏭ Next / ⏮ Prev
   const handleNext = async () => {
     if (currentIndex < upNextQueue.length - 1) {
       const nextTrack = upNextQueue[currentIndex + 1];
       setCurrentIndex((i) => i + 1);
-      await playTrack(nextTrack, upNextQueue);
+      await playTrack(nextTrack, upNextQueue, "playlist");
     }
   };
 
@@ -137,10 +146,11 @@ export default function App() {
     if (currentIndex > 0) {
       const prevTrack = upNextQueue[currentIndex - 1];
       setCurrentIndex((i) => i - 1);
-      await playTrack(prevTrack, upNextQueue);
+      await playTrack(prevTrack, upNextQueue, "playlist");
     }
   };
 
+  // 🔁 Auto-resume current track
   useEffect(() => {
     if (currentTrack?.streamUrl && audioRef.current) {
       audioRef.current.src = currentTrack.streamUrl;
@@ -167,21 +177,24 @@ export default function App() {
         }}
       >
         <Routes>
-          <Route path="/" element={<Home onPlay={playTrack} />} />
-          <Route path="/search" element={<Search onPlay={playTrack} />} />
-          <Route path="/library" element={<Library onPlay={playTrack} />} />
+          <Route path="/" element={<Home onPlay={(t) => playTrack(t, null, "single")} />} />
+          <Route path="/search" element={<Search onPlay={(t) => playTrack(t, null, "search")} />} />
+          <Route path="/library" element={<Library onPlay={(t) => playTrack(t, null, "single")} />} />
           <Route
             path="/liked"
             element={
               <LikedSongs
-                onPlay={playTrack}
+                onPlay={(t, list) => playTrack(t, list, "liked")}
                 onToggleLike={toggleLike}
                 likedSet={likedSet}
                 refreshLiked={refreshLiked}
               />
             }
           />
-          <Route path="/discover" element={<Discover onPlay={playTrack} />} />
+          <Route
+            path="/discover"
+            element={<Discover onPlay={(t, list) => playTrack(t, list, "playlist")} />}
+          />
           <Route path="/recent" element={<Navigate to="/discover" replace />} />
         </Routes>
       </div>
@@ -196,6 +209,8 @@ export default function App() {
         onToggleLike={toggleLike}
         onNext={handleNext}
         onPrev={handlePrev}
+        upNextQueue={upNextQueue}
+        onPlay={playTrack}
       />
     </div>
   );
