@@ -1,67 +1,68 @@
 import React from "react";
-import { FaPlay, FaTrash } from "react-icons/fa";
 
-export default function UpNext({ upNextQueue, currentTrack, onPlay, onRemove, onClear }) {
-  if (!upNextQueue?.length)
-    return (
-      <div style={{ color: "#aaa", fontSize: 14, textAlign: "center", padding: 20 }}>
-        Queue is empty
-      </div>
-    );
-
+export default function UpNext({ upNextQueue, currentTrack, onPlay }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          paddingBottom: 8,
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
-          marginBottom: 8,
-        }}
-      >
-        <h3 style={{ color: "#fff", fontSize: 16 }}>Up Next</h3>
-        <button
-          onClick={onClear}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "#f87171",
-            cursor: "pointer",
-            fontSize: 12,
-          }}
-        >
-          Clear All
-        </button>
-      </div>
+    <div
+      className="glass-effect fade-in"
+      style={{
+        width: "320px",
+        height: "480px",
+        padding: "20px",
+        borderRadius: "16px",
+        color: "white",
+        display: "flex",
+        flexDirection: "column",
+        overflowY: "auto",
+        background: "rgba(20,20,30,0.5)",
+        backdropFilter: "blur(20px)",
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}
+    >
+      <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>
+        Up Next
+      </h3>
 
-      {upNextQueue.map((track, i) => {
-        const isActive = track.videoId === currentTrack?.videoId;
-        return (
+      {(!upNextQueue || upNextQueue.length === 0) ? (
+        <p style={{ color: "#aaa" }}>Nothing queued yet.</p>
+      ) : (
+        upNextQueue.slice(1).map((song, i) => (
           <div
-            key={track.videoId}
-            onClick={() => onPlay(track)}
+            key={song.videoId || i}
+            onClick={() => onPlay(song, upNextQueue)}
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 10,
-              padding: "6px 8px",
-              borderRadius: 8,
+              marginBottom: "14px",
+              gap: "12px",
               cursor: "pointer",
-              background: isActive
-                ? "rgba(139,92,246,0.15)"
-                : "rgba(255,255,255,0.05)",
-              transition: "background 0.2s ease",
+              padding: "6px",
+              borderRadius: "10px",
+              transition: "0.25s ease",
+              background:
+                currentTrack?.videoId === song.videoId
+                  ? "rgba(139,92,246,0.2)"
+                  : "transparent",
             }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = "rgba(139,92,246,0.15)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background =
+                currentTrack?.videoId === song.videoId
+                  ? "rgba(139,92,246,0.2)"
+                  : "transparent")
+            }
           >
             <img
-              src={track.thumbnail}
-              alt={track.title}
+              src={
+                song.thumbnail ||
+                `https://img.youtube.com/vi/${song.videoId}/mqdefault.jpg`
+              }
+              alt={song.title}
               style={{
-                width: 50,
-                height: 50,
-                borderRadius: 6,
+                width: 56,
+                height: 56,
+                borderRadius: 8,
                 objectFit: "cover",
               }}
             />
@@ -69,50 +70,30 @@ export default function UpNext({ upNextQueue, currentTrack, onPlay, onRemove, on
               <div
                 style={{
                   color: "#fff",
-                  fontWeight: isActive ? 600 : 500,
+                  fontWeight: 600,
                   fontSize: 14,
+                  whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
                 }}
               >
-                {track.title}
+                {song.title}
               </div>
-              <div style={{ color: "#aaa", fontSize: 12 }}>{track.artist}</div>
+              <div
+                style={{
+                  color: "#aaa",
+                  fontSize: 12,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {song.artist || "Unknown Artist"}
+              </div>
             </div>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onPlay(track);
-              }}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "#8b5cf6",
-                cursor: "pointer",
-              }}
-            >
-              <FaPlay size={14} />
-            </button>
-
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove(track.videoId);
-              }}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "#f87171",
-                cursor: "pointer",
-              }}
-            >
-              <FaTrash size={13} />
-            </button>
           </div>
-        );
-      })}
+        ))
+      )}
     </div>
   );
 }

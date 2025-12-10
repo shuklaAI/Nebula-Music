@@ -20,7 +20,7 @@ app.add_middleware(
 )
 
 # ==========================================================
-# ⚡ STREAM CACHE
+# ⚡ STREAM CACHING (major speed boost)
 # ==========================================================
 _stream_cache = {}
 CACHE_TTL = 60 * 30  # 30 minutes
@@ -50,6 +50,7 @@ async def stream(url: str):
         ydl_opts = {
             "quiet": True,
             "format": "bestaudio[ext=m4a]/bestaudio/best",
+            "extract_flat": False,
             "noplaylist": True,
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -66,9 +67,8 @@ async def stream(url: str):
         logger.warning(f"Stream failed: {e}")
         return {"error": str(e)}
 
-
 # ==========================================================
-# 🔍 SEARCH
+# 🔍 SEARCH ENDPOINT
 # ==========================================================
 @app.get("/search")
 async def search(q: str):
@@ -91,42 +91,97 @@ async def search(q: str):
         logger.warning(f"/search failed: {e}")
         return []
 
+# ==========================================================
+# 🔁 SMART UP NEXT (Dynamic Autoplay)
+# ==========================================================
+_upnext_cache = {}
+UPNEXT_TTL = 60 * 10  # 10 minutes
 
-# ==========================================================
-# 🔁 UP NEXT (Auto Playlist)
-# ==========================================================
 @app.get("/autoplay/upnext")
 async def autoplay_upnext(videoId: str):
+    """Smart Up Next Generator — produces mix-like related songs."""
     try:
         ydl_opts = {"quiet": True, "extract_flat": True, "skip_download": True}
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(f"https://www.youtube.com/watch?v={videoId}", download=False)
+
         related = []
-        for e in info.get("related_videos", [])[:20]:
-            if e.get("id"):
+        added_ids = set()
+        added_titles = set()
+
+        # ✅ Step 1: Use YouTube's related videos (best quality data)
+        for e in info.get("related_videos", [])[:25]:
+            vid = e.get("id")
+            title = (e.get("title") or "").strip().lower()
+            if not vid or vid in added_ids or title in added_titles:
+                continue
+            related.append({
+                "videoId": vid,
+                "title": e.get("title") or "Unknown Title",
+                "artist": e.get("uploader") or "Unknown Artist",
+                "thumbnail": f"https://img.youtube.com/vi/{vid}/hqdefault.jpg",
+            })
+            added_ids.add(vid)
+            added_titles.add(title)
+
+        # ✅ Step 2: If few or none, fallback to smart search
+        if len(related) < 10:
+            keywords = []
+            base_title = (info.get("title") or "").lower()
+            uploader = (info.get("uploader") or "").lower()
+            if "slowed" in base_title:
+                keywords += ["slowed reverb", "chill", "dreamcore", "reverb mix"]
+            elif "mix" in base_title:
+                keywords += ["mix songs", "playlist", "dj set"]
+            elif "lofi" in base_title:
+                keywords += ["lofi beats", "chillhop", "study music"]
+            else:
+                keywords += ["official audio", "remix", "cover", "song"]
+
+            # use one broad keyword search
+            query = f"{uploader} {base_title.split('-')[0]} {' '.join(keywords)}"
+            search_info = ydl.extract_info(f"ytsearch15:{query}", download=False)
+
+            for e in search_info.get("entries", []):
+                vid = e.get("id")
+                title = (e.get("title") or "").strip().lower()
+                if not vid or vid in added_ids or title in added_titles:
+                    continue
                 related.append({
-                    "videoId": e["id"],
+                    "videoId": vid,
                     "title": e.get("title"),
                     "artist": e.get("uploader"),
-                    "thumbnail": f"https://img.youtube.com/vi/{e['id']}/hqdefault.jpg",
+                    "thumbnail": f"https://img.youtube.com/vi/{vid}/hqdefault.jpg",
                 })
+                added_ids.add(vid)
+                added_titles.add(title)
+
+        # ✅ Step 3: Randomize slightly but prioritize diversity
         random.shuffle(related)
+        related = related[:20]
+
         return {"upnext": related}
+
     except Exception as e:
         logger.warning(f"UpNext failed: {e}")
         return {"upnext": []}
 
-
 # ==========================================================
-# 🎧 TRACK INFO (new)
+# 🎧 TRACK INFO ENDPOINT
 # ==========================================================
 @app.get("/track_info")
 async def get_track_info(video_id: str):
-    """Get detailed info for a single track."""
+    """Get detailed info about a single YouTube track."""
     try:
-        ydl_opts = {"quiet": True, "extract_flat": False, "skip_download": True}
+        ydl_opts = {
+            "quiet": True,
+            "extract_flat": False,
+            "skip_download": True,
+            "noplaylist": True,
+        }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
+
         return {
             "videoId": video_id,
             "title": info.get("title", "Unknown Title"),
@@ -144,45 +199,113 @@ async def get_track_info(video_id: str):
             "thumbnail": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
         }
 
-
 # ==========================================================
-# ❤️ LIKE / PLAYLIST SYSTEM
+# 📂 PLAYLIST MANAGEMENT
 # ==========================================================
 PLAYLISTS_FILE = Path("playlists.json")
-LIKES_FILE = Path("liked_songs.json")
 
-def load_json(path: Path, key):
-    if path.exists():
+def load_playlists():
+    if PLAYLISTS_FILE.exists():
         try:
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f).get(key, [])
+            with open(PLAYLISTS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f).get("playlists", [])
         except:
             return []
     return []
 
-def save_json(path: Path, key, data):
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump({key: data}, f, indent=2)
+def save_playlists(playlists):
+    with open(PLAYLISTS_FILE, "w", encoding="utf-8") as f:
+        json.dump({"playlists": playlists}, f, indent=2)
 
-@app.get("/liked/all")
-async def get_all_liked():
-    return {"liked": load_json(LIKES_FILE, "liked")}
+@app.get("/playlist/all")
+async def get_all_playlists():
+    return {"playlists": load_playlists()}
+
+@app.post("/playlist/create")
+async def create_playlist(request: Request):
+    body = await request.json()
+    name = body.get("name", "").strip()
+    if not name:
+        return {"error": "Playlist name required"}
+    playlists = load_playlists()
+    new_id = max([p["id"] for p in playlists], default=0) + 1 if playlists else 1
+    new_playlist = {"id": new_id, "name": name, "songs": []}
+    playlists.append(new_playlist)
+    save_playlists(playlists)
+    return {"id": new_id, "playlist": new_playlist}
+
+@app.post("/playlist/add")
+async def add_to_playlist(request: Request):
+    body = await request.json()
+    pid, videoId = body.get("playlist_id"), body.get("videoId")
+    playlists = load_playlists()
+    for pl in playlists:
+        if pl["id"] == pid:
+            if any(s["videoId"] == videoId for s in pl["songs"]):
+                return {"message": "Already added"}
+            pl["songs"].append({
+                "videoId": videoId,
+                "title": body.get("title"),
+                "artist": body.get("artist"),
+                "thumbnail": body.get("thumbnail"),
+            })
+            save_playlists(playlists)
+            return {"message": "Song added"}
+    return {"error": "Playlist not found"}
+
+@app.delete("/playlist/delete")
+async def delete_playlist(playlist_id: int = Query(...)):
+    playlists = load_playlists()
+    updated = [p for p in playlists if p["id"] != playlist_id]
+    save_playlists(updated)
+    return {"message": "Deleted"}
+
+# ==========================================================
+# ❤️ LIKE / UNLIKE SYSTEM
+# ==========================================================
+LIKES_FILE = Path("liked_songs.json")
+
+def load_likes():
+    if LIKES_FILE.exists():
+        try:
+            with open(LIKES_FILE, "r", encoding="utf-8") as f:
+                return json.load(f).get("liked", [])
+        except:
+            return []
+    return []
+
+def save_likes(liked):
+    with open(LIKES_FILE, "w", encoding="utf-8") as f:
+        json.dump({"liked": liked}, f, indent=2)
 
 @app.post("/like")
-async def toggle_like(videoId: str = Query(...), title: str = Query(...), artist: str = Query(""), thumbnail: str = Query("")):
-    liked = load_json(LIKES_FILE, "liked")
+async def toggle_like(
+    videoId: str = Query(...),
+    title: str = Query(...),
+    artist: str = Query(""),
+    thumbnail: str = Query(""),
+):
+    liked = load_likes()
     exists = next((s for s in liked if s["videoId"] == videoId), None)
     if exists:
         liked = [s for s in liked if s["videoId"] != videoId]
-        save_json(LIKES_FILE, "liked", liked)
+        save_likes(liked)
         return {"liked": False, "message": "Song unliked"}
-    liked.append({"videoId": videoId, "title": title, "artist": artist, "thumbnail": thumbnail})
-    save_json(LIKES_FILE, "liked", liked)
+    liked.append({
+        "videoId": videoId,
+        "title": title,
+        "artist": artist,
+        "thumbnail": thumbnail,
+    })
+    save_likes(liked)
     return {"liked": True, "message": "Song liked"}
 
+@app.get("/liked/all")
+async def get_all_liked():
+    return {"liked": load_likes()}
 
 # ==========================================================
-# 🌐 FALLBACK FRONTEND
+# 🌐 FRONTEND FALLBACK (for production build)
 # ==========================================================
 @app.get("/{full_path:path}")
 async def serve_frontend(full_path: str):
