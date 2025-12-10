@@ -1,12 +1,5 @@
 import React from "react";
 
-/*
-  PlayerBar is fixed to the bottom and shows:
-  - left: current thumbnail + title
-  - center: play/pause + progress
-  - right: volume control + extra buttons
-*/
-
 export default function PlayerBar({
   currentTrack,
   isPlaying,
@@ -38,7 +31,7 @@ export default function PlayerBar({
       <div className="player-center">
         <div className="player-controls">
           <button className="control small" onClick={() => {
-            // optional prev - add logic later
+            
           }}>⏮</button>
 
           <button className="control main" onClick={togglePlay}>
@@ -46,7 +39,7 @@ export default function PlayerBar({
           </button>
 
           <button className="control small" onClick={() => {
-            // optional next - add logic later
+            
           }}>⏭</button>
         </div>
 
