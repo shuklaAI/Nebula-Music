@@ -4,17 +4,16 @@ import nebulaLogo from "../assets/logo.png";
 const NebulaLogo = ({ mode = "background", active = false }) => {
   const [glow, setGlow] = useState(0);
 
-  // Optional pulsing glow effect (e.g., when music is playing)
   useEffect(() => {
     if (!active) return;
     const interval = setInterval(() => {
-      setGlow(Math.random() * 0.6 + 0.4); // range 0.4–1.0 for a breathing glow
+      setGlow(Math.random() * 0.6 + 0.4); 
     }, 400);
     return () => clearInterval(interval);
   }, [active]);
 
   if (mode === "brand") {
-    // Static logo for navbar, splash, or loading screen
+
     return (
       <div className="flex items-center gap-3 select-none">
         <img
@@ -29,7 +28,6 @@ const NebulaLogo = ({ mode = "background", active = false }) => {
     );
   }
 
-  // Background mode with optional glowing animation
   return (
     <div className="fixed inset-0 flex items-center justify-center -z-10">
       <img
