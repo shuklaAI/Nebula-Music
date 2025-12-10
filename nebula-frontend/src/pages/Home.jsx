@@ -1,4 +1,3 @@
-// src/pages/Home.jsx
 import React, { useState, useEffect } from "react";
 import api from "../api/nebulaApi";
 
@@ -17,9 +16,7 @@ export default function Home({ onPlay }) {
     loadTopTracks();
   }, []);
 
-  // ======================================================
-  // 🏠 Load Home Data
-  // ======================================================
+  // Load Home Data //
   async function loadHome() {
     try {
       const trendKeywords = [
@@ -54,9 +51,7 @@ export default function Home({ onPlay }) {
     }
   }
 
-  // ======================================================
-  // 🎵 Load Playlists
-  // ======================================================
+  //  Load Playlists // 
   async function loadPlaylist() {
     try {
       const res = await fetch(`${backend}/playlist/all`);
@@ -74,9 +69,7 @@ export default function Home({ onPlay }) {
     }
   }
 
-  // ======================================================
-  // 🎧 Load Made for You (keep layout exactly as before)
-  // ======================================================
+  //  Load Made for You  // 
   async function loadMadeForYou() {
     try {
       const cached = localStorage.getItem("nebula_mixes");
@@ -106,9 +99,7 @@ export default function Home({ onPlay }) {
     }
   }
 
-  // ======================================================
-  // 🎧 Load Top Tracks
-  // ======================================================
+  //  Load Top Tracks //
   async function loadTopTracks() {
     try {
       const songs = await api.searchSongs("top global hits 2025");
@@ -118,9 +109,7 @@ export default function Home({ onPlay }) {
     }
   }
 
-  // ======================================================
-  // ▶️ Play Song
-  // ======================================================
+  // Play Song //
   async function handlePlay(track, contextList) {
     try {
       const streamRes = await fetch(
@@ -142,9 +131,7 @@ export default function Home({ onPlay }) {
     }
   }
 
-  // ======================================================
-  // 🎨 SongCard
-  // ======================================================
+  //  SongCard // 
   const SongCard = ({ item, list }) => (
     <div
       onClick={() => handlePlay(item, list)}
@@ -191,9 +178,8 @@ export default function Home({ onPlay }) {
     </div>
   );
 
-  // ======================================================
-  // 🖼️ Render UI
-  // ======================================================
+
+  
   return (
     <div style={{ padding: "20px 40px", color: "white" }}>
       <h1 style={{ fontSize: 40, fontWeight: 700 }}>Good evening</h1>
@@ -220,7 +206,7 @@ export default function Home({ onPlay }) {
         )}
       </div>
 
-      {/* Made For You (untouched layout) */}
+      {/* Made For You ( layout) */}
       <h2 style={{ marginTop: 50, fontSize: 24 }}>Made For You</h2>
       {mixes.length === 0 ? (
         <p style={{ color: "#555" }}>Loading your daily mixes...</p>
@@ -243,7 +229,7 @@ export default function Home({ onPlay }) {
         ))
       )}
 
-      {/* Your Top Tracks (added below Made For You) */}
+      {/* Your Top Tracks */}
       <h2
         style={{
           marginTop: 60,
