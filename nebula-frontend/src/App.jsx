@@ -22,7 +22,6 @@ export default function App() {
 
   const audioRef = useRef(null);
 
-  // 🔁 Refresh liked songs
   const refreshLiked = async () => {
     try {
       const res = await fetch(`${BACKEND}/liked/all`);
@@ -36,7 +35,7 @@ export default function App() {
     }
   };
 
-  // ❤️ Toggle like/unlike
+  //  Toggle like/unlike
   const toggleLike = async (track) => {
     if (!track?.videoId) return;
     try {
@@ -60,7 +59,7 @@ export default function App() {
     }
   };
 
-  // 🎧 Fetch and cache stream URL
+  //  Fetch and cache stream URL
   const getStreamUrl = async (videoId) => {
     if (streamCache.has(videoId)) return streamCache.get(videoId);
     try {
@@ -80,7 +79,7 @@ export default function App() {
     }
   };
 
-  // 🕒 Fetch and cache duration for track
+  //  Fetch and cache duration for track
   const getTrackDuration = async (videoId) => {
     if (durationCache[videoId]) return durationCache[videoId];
     try {
@@ -96,7 +95,7 @@ export default function App() {
     }
   };
 
-  // 🧠 Smart Play Logic (context-aware)
+  //  Smart Play Logic (context-aware)
   const playTrack = async (track, contextList = null, contextType = "single") => {
     if (!track?.videoId) return;
     const streamUrl = await getStreamUrl(track.videoId);
@@ -125,16 +124,15 @@ export default function App() {
       window.dispatchEvent(new Event("recentUpdated"));
     } catch {}
 
-    // ⚙️ Contextual handling
+    //  Contextual handling
     if (contextType === "playlist" || contextType === "liked") {
-      // ✅ Keep static playlist order
       if (contextList && contextList !== upNextQueue) {
         setUpNextQueue(contextList || []);
       }
       const idx = contextList?.findIndex((t) => t.videoId === track.videoId);
       setCurrentIndex(idx >= 0 ? idx : 0);
     } else {
-      // 🎶 Dynamic queue for single / search
+      
       try {
         const res = await fetch(`${BACKEND}/autoplay/upnext?videoId=${track.videoId}`);
         const data = await res.json();
@@ -153,7 +151,6 @@ export default function App() {
     }
   };
 
-  // ⏭ Next / ⏮ Prev (fixed looping bug)
   const handleNext = async () => {
     if (currentIndex < upNextQueue.length - 1) {
       const newIndex = currentIndex + 1;
@@ -188,7 +185,6 @@ export default function App() {
     }
   };
 
-  // 🔁 Auto-resume current track
   useEffect(() => {
     if (currentTrack?.streamUrl && audioRef.current) {
       audioRef.current.src = currentTrack.streamUrl;
