@@ -18,12 +18,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ==========================================================
-# ⚡ STREAM CACHING (major speed boost)
-# ==========================================================
+#  STREAM CACHING (major speed boost)
 _stream_cache = {}
-CACHE_TTL = 60 * 30  # 30 minutes
+CACHE_TTL = 60 * 30  
 
 def get_cached_stream(url: str):
     now = time.time()
@@ -37,10 +34,8 @@ def get_cached_stream(url: str):
 def save_stream(url: str, stream_url: str):
     _stream_cache[url] = {"url": stream_url, "time": time.time()}
 
+# STREAM ENDPOINT
 
-# ==========================================================
-# 🎵 STREAM ENDPOINT
-# ==========================================================
 @app.get("/stream")
 async def stream(url: str):
     cached = get_cached_stream(url)
@@ -67,9 +62,8 @@ async def stream(url: str):
         logger.warning(f"Stream failed: {e}")
         return {"error": str(e)}
 
-# ==========================================================
-# 🔍 SEARCH ENDPOINT
-# ==========================================================
+# SEARCH ENDPOINT
+
 @app.get("/search")
 async def search(q: str):
     try:
@@ -91,11 +85,11 @@ async def search(q: str):
         logger.warning(f"/search failed: {e}")
         return []
 
-# ==========================================================
-# 🔁 SMART UP NEXT (Dynamic Autoplay)
-# ==========================================================
+
+# SMART UP NEXT (Dynamic Autoplay)
+
 _upnext_cache = {}
-UPNEXT_TTL = 60 * 10  # 10 minutes
+UPNEXT_TTL = 60 * 10  
 
 @app.get("/autoplay/upnext")
 async def autoplay_upnext(videoId: str):
@@ -108,8 +102,7 @@ async def autoplay_upnext(videoId: str):
         related = []
         added_ids = set()
         added_titles = set()
-
-        # ✅ Step 1: Use YouTube's related videos (best quality data)
+        
         for e in info.get("related_videos", [])[:25]:
             vid = e.get("id")
             title = (e.get("title") or "").strip().lower()
@@ -124,7 +117,6 @@ async def autoplay_upnext(videoId: str):
             added_ids.add(vid)
             added_titles.add(title)
 
-        # ✅ Step 2: If few or none, fallback to smart search
         if len(related) < 10:
             keywords = []
             base_title = (info.get("title") or "").lower()
@@ -138,7 +130,6 @@ async def autoplay_upnext(videoId: str):
             else:
                 keywords += ["official audio", "remix", "cover", "song"]
 
-            # use one broad keyword search
             query = f"{uploader} {base_title.split('-')[0]} {' '.join(keywords)}"
             search_info = ydl.extract_info(f"ytsearch15:{query}", download=False)
 
@@ -156,7 +147,6 @@ async def autoplay_upnext(videoId: str):
                 added_ids.add(vid)
                 added_titles.add(title)
 
-        # ✅ Step 3: Randomize slightly but prioritize diversity
         random.shuffle(related)
         related = related[:20]
 
@@ -166,9 +156,8 @@ async def autoplay_upnext(videoId: str):
         logger.warning(f"UpNext failed: {e}")
         return {"upnext": []}
 
-# ==========================================================
-# 🎧 TRACK INFO ENDPOINT
-# ==========================================================
+# TRACK INFO ENDPOINT
+
 @app.get("/track_info")
 async def get_track_info(video_id: str):
     """Get detailed info about a single YouTube track."""
@@ -198,10 +187,9 @@ async def get_track_info(video_id: str):
             "duration": 0,
             "thumbnail": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
         }
+        
+#  PLAYLIST MANAGEMENT
 
-# ==========================================================
-# 📂 PLAYLIST MANAGEMENT
-# ==========================================================
 PLAYLISTS_FILE = Path("playlists.json")
 
 def load_playlists():
@@ -260,9 +248,8 @@ async def delete_playlist(playlist_id: int = Query(...)):
     save_playlists(updated)
     return {"message": "Deleted"}
 
-# ==========================================================
-# ❤️ LIKE / UNLIKE SYSTEM
-# ==========================================================
+#  LIKE / UNLIKE 
+
 LIKES_FILE = Path("liked_songs.json")
 
 def load_likes():
@@ -304,9 +291,9 @@ async def toggle_like(
 async def get_all_liked():
     return {"liked": load_likes()}
 
-# ==========================================================
-# 🌐 FRONTEND FALLBACK (for production build)
-# ==========================================================
+
+#  FRONTEND ( production build)
+
 @app.get("/{full_path:path}")
 async def serve_frontend(full_path: str):
     index_path = Path("frontend/dist/index.html")
