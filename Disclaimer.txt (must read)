@@ -1,0 +1,159 @@
+============================================================================
+                        NEBULA-MUZIC DISCLAIMER
+============================================================================
+
+IMPORTANT LEGAL NOTICE - PLEASE READ CAREFULLY
+
+This software and its source code are provided for EDUCATIONAL PURPOSES ONLY.
+By accessing, using, or modifying this software, you acknowledge and agree to
+the following terms and conditions.
+
+============================================================================
+1. EDUCATIONAL PURPOSE
+============================================================================
+This project is created solely for:
+- Learning web development concepts
+- Understanding audio streaming architectures
+- Practicing React and FastAPI development
+- Portfolio demonstration of technical skills
+
+It is NOT intended for:
+- Public use or distribution
+- Commercial purposes
+- Production deployment
+- Any use outside of local development
+
+============================================================================
+2. COPYRIGHT AND INTELLECTUAL PROPERTY
+============================================================================
+2.1 Audio Content:
+    - All audio content accessible through this software belongs to its
+      respective copyright holders (artists, labels, platforms)
+    - This software demonstrates technical concepts using content from
+      third-party platforms for educational purposes only
+    - No rights to stream, distribute, or use audio content are granted
+      by this software
+
+2.2 Code:
+    - The source code is licensed under MIT License (see LICENSE file)
+    - You may modify and use the code for educational purposes
+    - You may NOT use the code to create public streaming services
+
+============================================================================
+3. LEGAL RESTRICTIONS
+============================================================================
+3.1 Local Development Only:
+    - This software must only be run on localhost (127.0.0.1)
+    - Do not deploy to public servers (Vercel, Netlify, Heroku, etc.)
+    - Do not make accessible over the internet
+
+3.2 No Public Distribution:
+    - Do not share executable versions
+    - Do not create public instances
+    - Do not distribute modified versions for public use
+
+3.3 No Monetization:
+    - Do not charge for access
+    - Do not display advertisements
+    - Do not accept donations for this software
+
+3.4 Platform Terms of Service:
+    - This software may demonstrate concepts that could violate third-party
+      Terms of Service if used publicly
+    - You are responsible for understanding and complying with all relevant
+      Terms of Service
+
+============================================================================
+4. DISCLAIMER OF LIABILITY
+============================================================================
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+The authors assume no responsibility for:
+- Any legal consequences from misuse of this software
+- Violations of third-party terms of service
+- Copyright infringement by users
+- Any damages resulting from use of this software
+
+============================================================================
+5. USER RESPONSIBILITIES
+============================================================================
+By using this software, you agree to:
+
+5.1 Use only for educational purposes on localhost
+5.2 Respect all copyright and intellectual property rights
+5.3 Not circumvent any digital rights management (DRM) technologies
+5.4 Not use for unauthorized streaming or distribution
+5.5 Comply with all applicable laws and regulations
+5.6 Accept full responsibility for your use of this software
+
+============================================================================
+6. INTELLECTUAL PROPERTY ACKNOWLEDGMENTS
+============================================================================
+This software may interact with or demonstrate concepts related to:
+
+- YouTube (Google LLC) - Terms of Service apply
+- Various music copyright holders
+- Other third-party services
+
+All trademarks, service marks, and copyrights are property of their
+respective owners. This project is not affiliated with, endorsed by, or
+sponsored by any of these entities.
+
+============================================================================
+7. PROFESSIONAL USE IN PORTFOLIOS
+============================================================================
+This project may be included in developer portfolios to demonstrate:
+
+- Technical skills in full-stack development
+- Understanding of audio streaming concepts
+- UI/UX design capabilities
+- Problem-solving abilities
+
+When showcasing this project:
+- Clearly label it as "Educational/Portfolio Project"
+- Specify "Local development only"
+- Do not provide public access links
+- Focus on technical implementation, not the service
+
+============================================================================
+8. VIOLATION CONSEQUENCES
+============================================================================
+Violation of these terms may result in:
+
+- Legal action from copyright holders
+- Termination of hosting accounts
+- Removal from code repositories
+- Other legal and financial consequences
+
+============================================================================
+9. ACCEPTANCE OF TERMS
+============================================================================
+By accessing, using, or modifying this software, you acknowledge that:
+
+- You have read this disclaimer
+- You understand the restrictions
+- You accept full responsibility for your use
+- You agree to use this software only for educational purposes on localhost
+
+============================================================================
+CONTACT FOR EDUCATIONAL INQUIRIES
+============================================================================
+For questions about the educational aspects of this project:
+GitHub: @shuklaAI
+
+For legal questions regarding copyright or terms of service:
+Consult with a qualified legal professional.
+
+============================================================================
+LAST UPDATED: 16/12/2025
+============================================================================
+
+This disclaimer is subject to change. Users are responsible for checking
+for updates.
